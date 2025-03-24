@@ -1,5 +1,5 @@
 import requests
-from flask import Flask, jsonify, request
+from flask import jsonify, request
 
 
 API_KEY = "PUZXP7CxWkPaWnvDWdacgiS4M"
@@ -16,6 +16,21 @@ def fetch_route_data():
     data = response.json()
     routes = data.get("bustime-response", {}).get("routes", [])
 
-  
+    struct_data = [
+      {
+        "route": route["rt"],
+        "rtname": route["rtnm"]
+      }
+      for route in routes
+    ]
+    return struct_data
+  else:
+    return {"error": f"could not fetch any routes. status {response.status_code}"}
     
-def fetch_route_patterns():
+#def fetch_route_patterns():
+
+def register_routedata(app):
+  @app.route("/routes", methods=['GET'])
+  def fetch_rtdata():
+    result = fetch_route_data()
+    return jsonify(result)
