@@ -44,4 +44,3 @@ def register_routes(app):
         bus_id = request.args.get("bus_id")
         result = fetch_realtime_data(route, bus_id)
         return jsonify(result)
-
