@@ -4,6 +4,4 @@ CREATE TABLE WeatherData (
     Temperature DECIMAL(5,2),
     Precipitation DECIMAL(5,2),
     WindSpeed DECIMAL(5,2),
-    Visibility DECIMAL(5,2),
-    Conditions VARCHAR(50)  -- e.g., "Rainy", "Sunny", "Snowy"
 );
