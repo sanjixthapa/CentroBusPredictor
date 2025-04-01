@@ -20,7 +20,7 @@ def fetch_realtime_data(route=None, bus_id=None):
         data = response.json() #response data from /getvehicles
         buses = data.get("bustime-response", {}).get("vehicle",[])  
         
-        structured_data = [
+        bus_data = [
             {
                "bus_id": bus["vid"],
                 "route": bus["rt"],
@@ -31,9 +31,9 @@ def fetch_realtime_data(route=None, bus_id=None):
             }
             for bus in buses
         ]
-        if structured_data == []:
+        if bus_data == []:
             return {"error": "No buses found"}
-        return structured_data
+        return bus_data
     else:
         return {"error": f"failed to fetch data. Status: {response.status_code}"}
 #only fetches data cant store it in db yet

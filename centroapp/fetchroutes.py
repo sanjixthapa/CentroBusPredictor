@@ -1,5 +1,5 @@
 import requests
-import mysql.connector
+#import mysql.connector
 from flask import jsonify, request
 
 
@@ -17,14 +17,14 @@ def fetch_route_data():
     data = response.json()
     routes = data.get("bustime-response", {}).get("routes", [])
 
-    struct_data = [
+    route_data = [
       {
         "route": route["rt"],
         "rtname": route["rtnm"]
       }
       for route in routes
     ]
-    return struct_data
+    return route_data
   else:
     return {"error": f"could not fetch any routes. status {response.status_code}"}
     
