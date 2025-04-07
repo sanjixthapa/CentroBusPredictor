@@ -3,7 +3,7 @@ CREATE TABLE RealTimeBusData (
     RouteID INT,
     Latitude DECIMAL(9,6),
     Longitude DECIMAL(9,6),
-    Speed DECIMAL(5,2),  -- Optional: Track speed for better predictions
+    Speed DECIMAL(5,2),  -- Optional:
     Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (RouteID) REFERENCES Routes(RouteID)
 );
