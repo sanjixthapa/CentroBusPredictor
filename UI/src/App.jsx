@@ -4,6 +4,7 @@ import AllBuses from './pages/AllBuses'
 import './css/App.css'
 import { Route, Routes } from 'react-router-dom'
 import NavBar from './components/NavBar'
+import Help from './pages/Help'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -16,6 +17,7 @@ function App() {
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/allbuses' element={<AllBuses />} />
+          <Route path='help' element={<Help />} />
         </Routes>
       </main>
     </div>
