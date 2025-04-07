@@ -1,0 +1,54 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 20px;
+    background-color: #f4f4f4; /* Light grey background */
+}
+
+/* Main container that holds all content */
+.help-container {
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling for headings */
+h1, h2 {
+    color: #333; /* Dark grey color for text */
+}
+
+/* Styling for unordered list in Getting Started section */
+ul {
+    padding-left: 20px;
+}
+
+/* Table styling for the Troubleshooting section */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+/* Table header styling */
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+/* Header row of the table */
+th {
+    background-color: #0073e6; /* Blue background */
+    color: white; /* White text */
+}
+
+/* Contact section styling */
+.contact-info {
+    margin-top: 20px;
+    padding: 10px;
+    background: #e6f7ff; /* Light blue background */
+    border-left: 5px solid #0073e6; /* Blue left border */
+}
