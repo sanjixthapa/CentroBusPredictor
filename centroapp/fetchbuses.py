@@ -1,42 +1,91 @@
 import requests
-#from app.DBconnector import get_db_connection
+from datetime import datetime
 from flask import jsonify, request
+from .DBconnector import get_db_session
+from .models import RealTimeBusData, Route
 
 API_KEY = "PUZXP7CxWkPaWnvDWdacgiS4M"
 base_URL = "https://bus-time.centro.org/bustime/api/v3/"
 
+
 def fetch_realtime_data(route=None, bus_id=None):
-    endpoint = "getvehicles"#centro api endpt
-    params = { "key": API_KEY,
-              "format": "json"}
+    endpoint = "getvehicles"  # centro api endpt
+    params = {"key": API_KEY, "format": "json"}
+
     if route and not bus_id:
-        params["rt"] = route #rt filter param
+        params["rt"] = route  # rt filter param
     elif bus_id and not route:
-        params["vid"] = bus_id #vid param  
-        
+        params["vid"] = bus_id  # vid param
+
     response = requests.get(base_URL + endpoint, params=params)
-    
-    if response.status_code == 200: #OK
-        data = response.json() #response data from /getvehicles
-        buses = data.get("bustime-response", {}).get("vehicle",[])  
-        
+
+    if response.status_code == 200:  # OK
+        data = response.json()  # response data from /getvehicles
+        buses = data.get("bustime-response", {}).get("vehicle", [])
+
         bus_data = [
             {
-               "bus_id": bus["vid"],
+                "bus_id": bus["vid"],
                 "route": bus["rt"],
-                "latitude": bus["lat"],
-                "longitude": bus["lon"],
-                "speed": bus["spd"],
-                "timestamp": bus["tmstmp"] 
+                "latitude": float(bus["lat"]),
+                "longitude": float(bus["lon"]),
+                "speed": float(bus["spd"]),
+                "timestamp": bus["tmstmp"]
             }
             for bus in buses
         ]
-        if bus_data == []:
+
+        if not bus_data:
             return {"error": "No buses found"}
+
+        # Store in database
+        save_bus_data_to_db(bus_data)
+
         return bus_data
     else:
-        return {"error": f"failed to fetch data. Status: {response.status_code}"}
-#only fetches data cant store it in db yet
+        return {"error": f"Failed to fetch data. Status: {response.status_code}"}
+
+
+def save_bus_data_to_db(bus_data_list):
+    """Save the bus data to the database"""
+    session = get_db_session()
+    try:
+        for bus_data in bus_data_list:
+            # Convert timestamp format from API to datetime
+            timestamp = datetime.strptime(bus_data["timestamp"], "%Y%m%d %H:%M")
+
+            # Get or create route
+            route_obj = session.query(Route).filter_by(RouteName=bus_data["route"]).first()
+            if not route_obj:
+                route_obj = Route(RouteName=bus_data["route"])
+                session.add(route_obj)
+                session.flush()  # Get the RouteID
+
+            # Create real-time bus data entry
+            bus_entry = RealTimeBusData(
+                BusID=int(bus_data["bus_id"]),
+                RouteID=route_obj.RouteID,
+                Latitude=bus_data["latitude"],
+                Longitude=bus_data["longitude"],
+                Speed=bus_data["speed"],
+                Timestamp=timestamp
+            )
+
+            # Upsert - delete old entry if exists and insert new one
+            existing = session.query(RealTimeBusData).filter_by(BusID=int(bus_data["bus_id"])).first()
+            if existing:
+                session.delete(existing)
+
+            session.add(bus_entry)
+
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(f"Error saving bus data: {e}")
+    finally:
+        session.close()
+
+
 def register_routes(app):
     @app.route("/buses", methods=['GET'])
     def fetch_data():
@@ -44,3 +93,36 @@ def register_routes(app):
         bus_id = request.args.get("bus_id")
         result = fetch_realtime_data(route, bus_id)
         return jsonify(result)
+
+    @app.route("/buses/db", methods=['GET'])
+    def get_buses_from_db():
+        """Get buses from database instead of API"""
+        session = get_db_session()
+        try:
+            route = request.args.get("route")
+
+            query = session.query(RealTimeBusData)
+            if route:
+                route_obj = session.query(Route).filter_by(RouteName=route).first()
+                if route_obj:
+                    query = query.filter_by(RouteID=route_obj.RouteID)
+
+            buses = query.all()
+
+            result = [
+                {
+                    "bus_id": bus.BusID,
+                    "route": bus.route.RouteName,
+                    "latitude": float(bus.Latitude),
+                    "longitude": float(bus.Longitude),
+                    "speed": float(bus.Speed),
+                    "timestamp": bus.Timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                }
+                for bus in buses
+            ]
+
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({"error": str(e)})
+        finally:
+            session.close()

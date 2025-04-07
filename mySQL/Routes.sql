@@ -1,5 +1,5 @@
 CREATE TABLE Routes (
     RouteID INT PRIMARY KEY AUTO_INCREMENT,
-    RouteName VARCHAR(100) NOT NULL,
+    RouteName VARCHAR(100) NOT NULL
 );
 #

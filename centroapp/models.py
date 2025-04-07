@@ -1,20 +1,67 @@
-#(possible)orm models for database 
-class route:
-    def __init__(self, route_id, route_name, route_start, route_end):
-        self.route_id = route_id
-        self.route_name = route_name
-        self.route_start = route_start
-        self.route_end = route_end
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
-class bus: #realtime bus
-    def __init__(self, bus_id, route_id, latitude, longitude, speed, timestmp):
-        self.bus_id = bus_id
-        self.route_id = route_id
-        self.latitude = latitude
-        self.longitude = longitude
-        self.speed = speed
-        self.timestmp = timestmp
+Base = declarative_base()
 
 
-        
-          
+class Route(Base):
+    __tablename__ = 'Routes'
+
+    RouteID = Column(Integer, primary_key=True, autoincrement=True)
+    RouteName = Column(String(100), nullable=False)
+
+    # Relationships
+    real_time_buses = relationship("RealTimeBusData", back_populates="route")
+    historical_buses = relationship("HistoricalBusData", back_populates="route")
+
+    def __repr__(self):
+        return f"<Route(RouteID={self.RouteID}, RouteName='{self.RouteName}')>"
+
+
+class RealTimeBusData(Base):
+    __tablename__ = 'RealTimeBusData'
+
+    BusID = Column(Integer, primary_key=True, autoincrement=True)
+    RouteID = Column(Integer, ForeignKey('Routes.RouteID'))
+    Latitude = Column(Float(precision=9, decimal_return_scale=6))
+    Longitude = Column(Float(precision=9, decimal_return_scale=6))
+    Speed = Column(Float(precision=5, decimal_return_scale=2))
+    Timestamp = Column(DateTime, default=func.now())
+
+    # Relationship
+    route = relationship("Route", back_populates="real_time_buses")
+
+    def __repr__(self):
+        return f"<RealTimeBusData(BusID={self.BusID}, RouteID={self.RouteID}, Lat={self.Latitude}, Lon={self.Longitude})>"
+
+
+class HistoricalBusData(Base):
+    __tablename__ = 'HistoricalBusData'
+
+    RecordID = Column(Integer, primary_key=True, autoincrement=True)
+    BusID = Column(Integer, ForeignKey('RealTimeBusData.BusID'))
+    RouteID = Column(Integer, ForeignKey('Routes.RouteID'))
+    Latitude = Column(Float(precision=9, decimal_return_scale=6))
+    Longitude = Column(Float(precision=9, decimal_return_scale=6))
+    Speed = Column(Float(precision=5, decimal_return_scale=2))
+    Timestamp = Column(DateTime)
+
+    # Relationship
+    route = relationship("Route", back_populates="historical_buses")
+
+    def __repr__(self):
+        return f"<HistoricalBusData(RecordID={self.RecordID}, BusID={self.BusID}, RouteID={self.RouteID})>"
+
+
+class WeatherData(Base):
+    __tablename__ = 'WeatherData'
+
+    WeatherID = Column(Integer, primary_key=True, autoincrement=True)
+    Timestamp = Column(DateTime, default=func.now())
+    Temperature = Column(Float(precision=5, decimal_return_scale=2))
+    Precipitation = Column(Float(precision=5, decimal_return_scale=2))
+    WindSpeed = Column(Float(precision=5, decimal_return_scale=2))
+
+    def __repr__(self):
+        return f"<WeatherData(WeatherID={self.WeatherID}, Temp={self.Temperature}, Precip={self.Precipitation})>"
