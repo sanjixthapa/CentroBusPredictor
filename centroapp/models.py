@@ -65,3 +65,12 @@ class WeatherData(Base):
 
     def __repr__(self):
         return f"<WeatherData(WeatherID={self.WeatherID}, Temp={self.Temperature}, Precip={self.Precipitation})>"
+    
+class Stop(Base):
+    __tablename__ = 'Stops'
+    stop_id = Column(String(20), primary_key=True)
+    route_id = Column(String(10))
+    stop_name = Column(String(100))
+    latitude = Column(Float)
+    longitude = Column(Float)
+    
