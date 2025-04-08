@@ -23,10 +23,13 @@ def fetch_realtime_data(route=None, bus_id=None):
         data = response.json()  # response data from /getvehicles
         buses = data.get("bustime-response", {}).get("vehicle", [])
 
+        if not buses:
+            return {"error": "No buses found"}
+
         bus_data = [
             {
                 "bus_id": bus["vid"],
-                "route": bus["rt"],
+                "route": bus["rt"],  # This is the route ID (e.g. "OSW10")
                 "latitude": float(bus["lat"]),
                 "longitude": float(bus["lon"]),
                 "speed": float(bus["spd"]),
@@ -34,9 +37,6 @@ def fetch_realtime_data(route=None, bus_id=None):
             }
             for bus in buses
         ]
-
-        if not bus_data:
-            return {"error": "No buses found"}
 
         # Store in database
         save_bus_data_to_db(bus_data)
@@ -54,17 +54,18 @@ def save_bus_data_to_db(bus_data_list):
             # Convert timestamp format from API to datetime
             timestamp = datetime.strptime(bus_data["timestamp"], "%Y%m%d %H:%M")
 
-            # Get or create route
-            route_obj = session.query(Route).filter_by(RouteName=bus_data["route"]).first()
+            # Get or create route - bus_data["route"] is the route ID
+            route_obj = session.query(Route).filter_by(RouteID=bus_data["route"]).first()
             if not route_obj:
-                route_obj = Route(RouteName=bus_data["route"])
+                # If route doesn't exist, create with ID as both RouteID and Route (temporary)
+                route_obj = Route(RouteID=bus_data["route"], Route=bus_data["route"])
                 session.add(route_obj)
-                session.flush()  # Get the RouteID
+                session.flush()
 
             # Create real-time bus data entry
             bus_entry = RealTimeBusData(
                 BusID=int(bus_data["bus_id"]),
-                RouteID=route_obj.RouteID,
+                RouteID=route_obj.RouteID,  # This is the route ID
                 Latitude=bus_data["latitude"],
                 Longitude=bus_data["longitude"],
                 Speed=bus_data["speed"],
@@ -103,20 +104,20 @@ def register_routes(app):
 
             query = session.query(RealTimeBusData)
             if route:
-                route_obj = session.query(Route).filter_by(RouteName=route).first()
-                if route_obj:
-                    query = query.filter_by(RouteID=route_obj.RouteID)
+                # Filter by route ID
+                query = query.filter_by(RouteID=route)
 
             buses = query.all()
 
             result = [
                 {
                     "bus_id": bus.BusID,
-                    "route": bus.route.RouteName,
-                    "latitude": float(bus.Latitude),
-                    "longitude": float(bus.Longitude),
-                    "speed": float(bus.Speed),
-                    "timestamp": bus.Timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                    "route_id": bus.RouteID,  # Route ID (e.g., "OSW10")
+                    "route_name": bus.route.Route if bus.route else None,  # Route name (e.g., "SUNY Oswego Blue Route")
+                    "latitude": float(bus.Latitude) if bus.Latitude else None,
+                    "longitude": float(bus.Longitude) if bus.Longitude else None,
+                    "speed": float(bus.Speed) if bus.Speed else None,
+                    "timestamp": bus.Timestamp.strftime("%Y-%m-%d %H:%M:%S") if bus.Timestamp else None
                 }
                 for bus in buses
             ]

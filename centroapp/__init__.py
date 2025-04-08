@@ -1,3 +1,5 @@
+#__init__.py
+
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from .fetchbuses import register_routes, fetch_realtime_data
