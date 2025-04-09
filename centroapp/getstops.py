@@ -52,7 +52,8 @@ def fetch_and_store_stops(route_id, dir):
                     route_id=route_id,
                     stop_name=stop.get("stpnm"),
                     latitude=stop.get("lat"),
-                    longitude=stop.get("lon")
+                    longitude=stop.get("lon"),
+                    direction=dir
                 )
                 session.add(new_stop)
         session.commit()

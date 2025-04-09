@@ -73,4 +73,5 @@ class Stop(Base):
     stop_name = Column(String(100))
     latitude = Column(Float)
     longitude = Column(Float)
+    direction = Column(String(50))
     
