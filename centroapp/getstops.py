@@ -13,15 +13,14 @@ def fetch_directions(route_id):
         "format": "json"
     }
     
-    response = request.get(base_URL + "getdirections", params=params)
+    response = requests.get(base_URL + "getdirections", params=params)
     if response.status_code != 200:
         return []
     
     data = response.json()
     directions = data.get("bustime-response", {}).get("directions", [])
     
-    for dir in directions:
-        return dir["id"]
+    return [dir["id"] for dir in directions]
     
 def fetch_and_store_stops(route_id, dir):
     #fetch stops from api given rt and dir param
