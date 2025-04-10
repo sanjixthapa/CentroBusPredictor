@@ -55,9 +55,9 @@ def save_bus_data_to_db(bus_data_list):
             timestamp = datetime.strptime(bus_data["timestamp"], "%Y%m%d %H:%M")
 
             # Get or create route
-            route_obj = session.query(Route).filter_by(RouteName=bus_data["route"]).first()
+            route_obj = session.query(Route).filter_by(RouteID=bus_data["route"]).first()
             if not route_obj:
-                route_obj = Route(RouteName=bus_data["route"])
+                route_obj = Route(RouteID=bus_data["route"])
                 session.add(route_obj)
                 session.flush()  # Get the RouteID
 
@@ -103,7 +103,7 @@ def register_routes(app):
 
             query = session.query(RealTimeBusData)
             if route:
-                route_obj = session.query(Route).filter_by(RouteName=route).first()
+                route_obj = session.query(Route).filter_by(Route=route).first()
                 if route_obj:
                     query = query.filter_by(RouteID=route_obj.RouteID)
 

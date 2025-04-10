@@ -8,15 +8,15 @@ Base = declarative_base()
 class Route(Base):
     __tablename__ = 'Routes'
 
-    RouteID = Column(Integer, primary_key=True, autoincrement=True)
-    RouteName = Column(String(100), nullable=False)
+    RouteID = Column(String(100), primary_key=True)
+    Route = Column(String(45))
 
     # Relationships
     real_time_buses = relationship("RealTimeBusData", back_populates="route")
     historical_buses = relationship("HistoricalBusData", back_populates="route")
 
     def __repr__(self):
-        return f"<Route(RouteID={self.RouteID}, RouteName='{self.RouteName}')>"
+        return f"<Route(RouteID={self.RouteID}, Route='{self.Route}')>"
 
 
 class RealTimeBusData(Base):

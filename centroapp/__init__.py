@@ -29,9 +29,10 @@ def create_app():
         try:
             all_routes = session.query(Route).all()
             for route in all_routes:
-                route_name = route.RouteName
+                route_name = route.Route
+                route_id = route.RouteID
                 print(f"Fetching data for route: {route_name}")
-                result = fetch_realtime_data(route=route_name)
+                result = fetch_realtime_data(route=route_id)
                 print(result)
         except Exception as e:
             print(f"Error during scheduled fetch: {e}")
