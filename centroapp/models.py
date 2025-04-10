@@ -75,3 +75,5 @@ class Stop(Base):
     longitude = Column(Float)
     direction = Column(String(50))
     
+    def __repr__(self):
+        return f"<Stop(stop_id={self.stop_id}, route_id={self.route_id})>"
