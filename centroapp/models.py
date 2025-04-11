@@ -1,3 +1,5 @@
+#models.py
+
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func, DECIMAL
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -9,7 +11,7 @@ class Route(Base):
     __tablename__ = 'Routes'
 
     RouteID = Column(String(100), primary_key=True)
-    Route = Column(String(45))
+    Route = Column(String(100), nullable=False)
 
     # Relationships
     real_time_buses = relationship("RealTimeBusData", back_populates="route")

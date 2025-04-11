@@ -1,3 +1,5 @@
+#fetchbuses.py
+
 import requests
 from datetime import datetime
 from flask import jsonify, request
@@ -97,11 +99,9 @@ def fetch_realtime_data(route=None, bus_id=None):
 
 def fetch_all_buses():
     """Fetch buses for all available routes"""
-    # First get all routes
     routes = fetch_all_routes()
 
-    # Check if we got an error
-    if routes and "error" in routes:
+    if isinstance(routes, dict) and "error" in routes:
         return routes
 
     all_buses = []
@@ -109,7 +109,7 @@ def fetch_all_buses():
 
     for route_id in route_ids:
         route_buses = fetch_realtime_data(route=route_id)
-        if route_buses and not isinstance(route_buses, dict) or "error" not in route_buses:
+        if isinstance(route_buses, list):  # Only accept valid bus list
             all_buses.extend(route_buses)
 
     return all_buses
@@ -140,11 +140,6 @@ def save_bus_data_to_db(bus_data_list):
                 Speed=bus_data["speed"],
                 Timestamp=timestamp
             )
-
-            # Upsert - delete old entry if exists and insert new one
-            existing = session.query(RealTimeBusData).filter_by(BusID=int(bus_data["bus_id"])).first()
-            if existing:
-                session.delete(existing)
 
             session.add(bus_entry)
 

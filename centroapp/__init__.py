@@ -1,5 +1,5 @@
-#__init__.py
-
+#init.py
+import datetime
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from .fetchbuses import register_routes, fetch_realtime_data
@@ -7,8 +7,9 @@ from .fetchroutes import register_routedata
 from .fetchweather import register_weather
 from .getstops import register_stops
 from .DBconnector import init_db, get_db_session
-from .models import Route
+from .models import Route, HistoricalBusData, RealTimeBusData
 import atexit
+
 
 def create_app():
     app = Flask(__name__)
@@ -26,25 +27,55 @@ def create_app():
     scheduler = BackgroundScheduler()
 
     def scheduled_bus_fetch():
-        print("Fetching bus data for all routes...")
         session = get_db_session()
         try:
-            all_routes = session.query(Route).all()
-            for route in all_routes:
-                route_name = route.RouteName
-                print(f"Fetching data for route: {route_name}")
-                result = fetch_realtime_data(route=route_name)
-                print(result)
+            # Safely get all route IDs as strings
+            route_ids = [r.RouteID for r in session.query(Route).all()]
         except Exception as e:
-            print(f"Error during scheduled fetch: {e}")
+            print(f"Error accessing routes for scheduled fetch: {e}")
+            return
         finally:
             session.close()
 
-    # Schedule the job to run every 2 minutes
-    scheduler.add_job(scheduled_bus_fetch, 'interval', minutes=2)
+        for route_id in route_ids:
+            try:
+                result = fetch_realtime_data(route=route_id)
+                print(f"Fetched {len(result) if isinstance(result, list) else 0} buses for route {route_id}")
+            except Exception as e:
+                print(f"Error during scheduled fetch for route {route_id}: {e}")
+
+    def archive_old_data(days_old=1):
+        session = get_db_session()
+        try:
+            cutoff_time = datetime.now() - datetime.timedelta(days=days_old)
+            old_data = session.query(RealTimeBusData).filter(RealTimeBusData.Timestamp < cutoff_time).all()
+
+            print(f"Archiving {len(old_data)} records...")
+
+            for record in old_data:
+                archive_record = HistoricalBusData(
+                    BusID=record.BusID,
+                    RouteID=record.RouteID,
+                    Latitude=record.Latitude,
+                    Longitude=record.Longitude,
+                    Speed=record.Speed,
+                    Timestamp=record.Timestamp
+                )
+                session.add(archive_record)
+                session.delete(record)  # Remove from real-time table
+
+            session.commit()
+            print("Archiving complete.")
+        except Exception as e:
+            session.rollback()
+            print(f"Archiving error: {e}")
+        finally:
+            session.close()
+
+    # Schedule the job to run every 2 minutesx
+    scheduler.add_job(scheduled_bus_fetch, 'interval', minutes=1)
+    scheduler.add_job(archive_old_data, 'interval', minutes=1)
     scheduler.start()
 
-    # Ensure scheduler shuts down properly when app exits
-    atexit.register(lambda: scheduler.shutdown())
 
     return app
