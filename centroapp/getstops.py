@@ -67,6 +67,33 @@ def fetch_and_store_stops(route_id, dir):
     
     return stops
 
+'''new function to serve stops straight from db. we will use this after we got all the stops needed'''
+def get_from_db(route_id=None, direction=None):
+    session = get_db_session()
+    try:
+        query = session.query(Stop)
+        if route_id:
+            query = query.filter_by(route_id=route_id)
+        if direction:
+            query = query.filter_by(direction=direction)
+        stops = query.all()
+        return [
+            {
+                "stop_id": s.stop_id,
+                "stop_name": s.stop_name,
+                "latitude": s.latitude,
+                "longitude": s.longitude,
+                "direction": s.direction
+                
+            } for s in stops
+        ]
+    except Exception as e:
+        session.rollback()
+        print(f"could not get stops from db {e}")
+    finally:
+        session.close()
+        
+
 def register_stops(app):
     @app.route("/stops", methods=["GET"])
     def get_stops():
@@ -77,9 +104,14 @@ def register_stops(app):
         if not route or not direction:
             return jsonify({"error":  "missing route or dir parameter"})
         
-        rt_directions = fetch_directions(route)
-        if direction not in rt_directions:
-            return jsonify({"error": "invalid directions"})
+        stops = get_from_db(route, direction)
+        if not stops:
+            return jsonify({"error": "no stops found"}), 404
+    
+    #comment out for now until api is back up    
+    #    rt_directions = fetch_directions(route)
+    #    if direction not in rt_directions:
+    #        return jsonify({"error": "invalid directions"})
         #returns stops based on route, direction
-        stops = fetch_and_store_stops(route, direction)
+    #    stops = fetch_and_store_stops(route, direction)
         return jsonify(stops)
