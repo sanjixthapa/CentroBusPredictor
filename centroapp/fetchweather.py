@@ -1,6 +1,7 @@
 #fetchweather.py
 
 import requests
+from datetime import datetime
 from flask import jsonify
 from .fetchbuses import fetch_realtime_data
 from .DBconnector import get_db_session
@@ -9,7 +10,7 @@ from .models import WeatherData
 WEATHER_API = "https://api.open-meteo.com/v1/forecast"
 
 
-def get_weather(lat, lon):
+def get_weather(lat, lon,bus_id=None, route_id=None):
     params = {
         'latitude': lat,
         'longitude': lon,
@@ -20,32 +21,51 @@ def get_weather(lat, lon):
 
     if response.status_code == 200:
         data = response.json()
-        weather_data = data.get("current", {})
-
-        # Save weather data to database
-        save_weather_to_db(weather_data)
-
+        weather_data = {
+            "temperature_2m": data.get("current", {}).get("temperature_2m", 0),
+            "precipitation": data.get("current", {}).get("precipitation", 0),
+            "wind_speed_10m": data.get("current", {}).get("wind_speed_10m", 0),
+            "time": data.get("current", {}).get("time"),
+            "bus_id": bus_id,
+            "route_id": route_id
+        }
+        saved_entry = save_weather_to_db(weather_data)
+        if saved_entry:
+            weather_data['weather_id'] = saved_entry.ID
+            print(f"Successfully saved weather data with ID: {saved_entry.ID}")
+        else:
+            print("Failed to save weather data to database")
         return weather_data
     return {}
-
 
 def save_weather_to_db(weather_data):
     """Save weather data to the database"""
     if not weather_data:
-        return
+        return None
 
     session = get_db_session()
     try:
+
+        print(
+            f"Attempting to save weather for BusID: {weather_data.get('bus_id')}, RouteID: {weather_data.get('route_id')}")
+
         weather_entry = WeatherData(
-            Temperature=weather_data.get("temperature_2m"),
-            Precipitation=weather_data.get("precipitation"),
-            WindSpeed=weather_data.get("wind_speed_10m")
+            RouteID=weather_data.get("route_id"),
+            BusID=weather_data.get("bus_id"),
+            Temperature=float(weather_data.get("temperature_2m", 0)),
+            Precipitation=float(weather_data.get("precipitation", 0)),
+            WindSpeed=float(weather_data.get("wind_speed_10m", 0)),
+            Timestamp=datetime.now()  # Using current time as timestamp
         )
+
         session.add(weather_entry)
         session.commit()
+        session.refresh(weather_entry)
+        return weather_entry
     except Exception as e:
         session.rollback()
         print(f"Error saving weather data: {e}")
+        return None
     finally:
         session.close()
 
@@ -59,24 +79,34 @@ def register_weather(app):
             return jsonify(buses)
 
         result = []  # Initialize empty list
-
         for bus in buses:
             bus_data = {
                 "bus_id": bus.get("bus_id"),
+                "route_id": route_id,
                 "latitude": bus.get("latitude"),
                 "longitude": bus.get("longitude"),
                 "weather": None
             }
 
             if bus.get("latitude") and bus.get("longitude"):
-                weather = get_weather(bus["latitude"], bus["longitude"])
+                weather = get_weather(
+                        lat=bus["latitude"],
+                        lon=bus["longitude"],
+                        bus_id=bus.get("bus_id"),  # Now passing bus_id
+                        route_id = route_id  # Now passing route_id
+                )
+
                 if weather:
+
                     bus_data["weather"] = {
-                        "temperature": weather.get("temperature_2m"),
-                        "precipitation": weather.get("precipitation"),
-                        "wind_speed": weather.get("wind_speed_10m"),
-                        "time": weather.get("time")
-                    }
+                            "temperature": weather.get("temperature_2m"),
+                            "precipitation": weather.get("precipitation"),
+                            "wind_speed": weather.get("wind_speed_10m"),
+                            "time": weather.get("time"),
+                            "weather_id": weather.get("weather_id")
+                            # "weather_id": db_entry.WeatherID if db_entry else None
+                        }
+
 
             result.append(bus_data)  # Append inside the loop
 
