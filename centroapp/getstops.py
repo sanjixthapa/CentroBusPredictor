@@ -46,7 +46,7 @@ def fetch_and_store_stops(route_id, dir):
             stop_id = stop["stpid"]
             #check if stop exists in database
             #if not add to db
-            existing_stop = session.query(Stop).filter_by(stop_id=stop_id).first()
+            existing_stop = session.query(Stop).filter_by(stop_id=stop_id, direction=dir).first()
             
             if not existing_stop:
                 new_stop = Stop(
