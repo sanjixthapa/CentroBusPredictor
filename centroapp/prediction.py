@@ -25,7 +25,6 @@ def fetch_predictions(stop_ids, route_ids=None, top=1):
     return data.get("bustime-response", {}).get("prd", [])
 
 
-
 # Flask route to expose predictions
 def register_predictions(app):
     @app.route("/predictions", methods=["GET"])
@@ -52,7 +51,6 @@ def register_predictions(app):
                 "predicted_time": p.get("prdtm"),
                 "countdown": int(p.get("prdctdn", 0)),
                 "delay": p.get("dly", False),
-                "passenger_load": p.get("psgld", "N/A")
 
             } for p in predictions
         ])
