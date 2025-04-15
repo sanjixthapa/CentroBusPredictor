@@ -8,6 +8,8 @@ from .fetchweather import register_weather
 from .getstops import register_stops
 from .DBconnector import init_db, get_db_session
 from .models import Route, HistoricalBusData, RealTimeBusData
+from .prediction import register_predictions
+
 import atexit
 
 
@@ -22,6 +24,7 @@ def create_app():
     register_routedata(app)
     register_weather(app)
     register_stops(app)
+    register_predictions(app)
 
     # Set up the background scheduler
     scheduler = BackgroundScheduler()
@@ -44,37 +47,8 @@ def create_app():
             except Exception as e:
                 print(f"Error during scheduled fetch for route {route_id}: {e}")
 
-    def archive_old_data(days_old=1):
-        session = get_db_session()
-        try:
-            cutoff_time = datetime.now() - datetime.timedelta(days=days_old)
-            old_data = session.query(RealTimeBusData).filter(RealTimeBusData.Timestamp < cutoff_time).all()
-
-            print(f"Archiving {len(old_data)} records...")
-
-            for record in old_data:
-                archive_record = HistoricalBusData(
-                    BusID=record.BusID,
-                    RouteID=record.RouteID,
-                    Latitude=record.Latitude,
-                    Longitude=record.Longitude,
-                    Speed=record.Speed,
-                    Timestamp=record.Timestamp
-                )
-                session.add(archive_record)
-                session.delete(record)  # Remove from real-time table
-
-            session.commit()
-            print("Archiving complete.")
-        except Exception as e:
-            session.rollback()
-            print(f"Archiving error: {e}")
-        finally:
-            session.close()
-
     # Schedule the job to run every 2 minutesx
     scheduler.add_job(scheduled_bus_fetch, 'interval', minutes=1)
-    scheduler.add_job(archive_old_data, 'interval', minutes=1)
     scheduler.start()
 
 

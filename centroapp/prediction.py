@@ -52,5 +52,7 @@ def register_predictions(app):
                 "predicted_time": p.get("prdtm"),
                 "countdown": int(p.get("prdctdn", 0)),
                 "delay": p.get("dly", False),
+                "passenger_load": p.get("psgld", "N/A")
+
             } for p in predictions
         ])
