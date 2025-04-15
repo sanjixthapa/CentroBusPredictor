@@ -61,14 +61,22 @@ class HistoricalBusData(Base):
 class WeatherData(Base):
     __tablename__ = 'WeatherData'
 
-    WeatherID = Column(Integer, primary_key=True, autoincrement=True)
+    ID = Column(Integer, primary_key=True, autoincrement=True)
+    RouteID = Column(String(100), ForeignKey('Routes.RouteID'))
+    BusID = Column(Integer, ForeignKey('RealTimeBusData.BusID'))
     Timestamp = Column(DateTime, default=func.now())
-    Temperature = Column(DECIMAL(5, 2))
-    Precipitation = Column(DECIMAL(5, 2))
-    WindSpeed = Column(DECIMAL(5, 2))
+    Temperature = Column(Float(precision=5, decimal_return_scale=2))
+    Precipitation = Column(Float(precision=5, decimal_return_scale=2))
+    WindSpeed = Column(Float(precision=5, decimal_return_scale=2))
+    # Relationships
+    route = relationship("Route")
+    bus = relationship("RealTimeBusData", foreign_keys=[BusID])
+
 
     def __repr__(self):
-        return f"<WeatherData(WeatherID={self.WeatherID}, Temp={self.Temperature}, Precip={self.Precipitation})>"
+        return (f"<WeatherData(ID={self.ID}, RouteID={self.RouteID}, BusID={self.BusID},"
+                f"Timestamp={self.Timestamp}, Temperature={self.Temperature}, "
+                f"Precipitation={self.Precipitation}, WindSpeed={self.WindSpeed})>")
 
 
 class Stop(Base):
