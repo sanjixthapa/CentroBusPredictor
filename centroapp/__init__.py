@@ -6,6 +6,7 @@ from .fetchbuses import register_routes, fetch_realtime_data
 from .fetchroutes import register_routedata
 from .fetchweather import register_weather
 from .getstops import register_stops
+from .prediction import register_predictions
 from .DBconnector import init_db, get_db_session
 from .models import Route, HistoricalBusData, RealTimeBusData
 import atexit
@@ -22,6 +23,7 @@ def create_app():
     register_routedata(app)
     register_weather(app)
     register_stops(app)
+    register_predictions(app)
 
     # Set up the background scheduler
     scheduler = BackgroundScheduler()
