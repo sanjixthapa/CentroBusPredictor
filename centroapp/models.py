@@ -82,12 +82,14 @@ class WeatherData(Base):
 class Stop(Base):
     __tablename__ = 'Stops'
 
-    stop_id = Column(String(20), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    stop_id = Column(String(20))
     route_id = Column(String(10), ForeignKey('Routes.RouteID', ondelete='SET NULL', onupdate='CASCADE'), index=True)
     stop_name = Column(String(100))
     latitude = Column(Float)
     longitude = Column(Float)
     direction = Column(String(50))
+    
 
     # Relationship
     route = relationship("Route", back_populates="stops")

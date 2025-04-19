@@ -6,6 +6,7 @@ from .fetchbuses import register_routes, fetch_realtime_data
 from .fetchroutes import register_routedata
 from .fetchweather import register_weather
 from .getstops import register_stops
+from .prediction import register_predictions
 from .DBconnector import init_db, get_db_session
 from .models import Route, HistoricalBusData, RealTimeBusData
 from .prediction import register_predictions
