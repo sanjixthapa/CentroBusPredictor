@@ -2,8 +2,8 @@
 import pandas as pd
 from datetime import timedelta
 from geopy.distance import geodesic
-from DBconnector import get_db_session
-from .models import HistoricalBusData, WeatherData, Stop
+from centroapp.DBconnector import get_db_session
+from centroapp.models import HistoricalBusData, WeatherData, Stop
 
 session = get_db_session()
 
