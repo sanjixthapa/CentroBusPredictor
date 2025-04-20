@@ -1,0 +1,14 @@
+Latitude
+Longitude
+Speed
+Temperature
+Precipitation
+WindSpeed
+stop_lat
+stop_lon
+distance_to_stop
+hour_sin
+hour_cos
+weekday_sin
+weekday_cos
+is_weekend

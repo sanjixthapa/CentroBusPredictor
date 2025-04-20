@@ -1,71 +1,146 @@
-#generate_training_data.py
 import pandas as pd
-from datetime import timedelta
-from geopy.distance import geodesic
+import math
+from datetime import datetime
 from centroapp.DBconnector import get_db_session
 from centroapp.models import HistoricalBusData, WeatherData, Stop
 
-session = get_db_session()
 
-#data from tables
-bus_data = pd.read_sql(session.query(HistoricalBusData).statement, session.bind)
-weather_data = pd.read_sql(session.query(WeatherData).statement, session.bind)
-stops = pd.read_sql(session.query(Stop).statement, session.bind)
+def haversine(lat1, lon1, lat2, lon2):
+    """Calculate distance between two points in meters"""
+    R = 6371  # km
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2.0) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2.0) ** 2
+    return R * 2 * math.asin(math.sqrt(a)) * 1000  # meters
 
-session.close()
 
-#timestamps to datetime
-bus_data['Timestamp'] = pd.to_datetime(bus_data['Timestamp'])
-weather_data['Timestamp'] = pd.to_datetime(weather_data['Timestamp'])
+def generate_training_data():
+    session = get_db_session()
+    training_rows = []
 
-#weather to each bus row
-def get_nearest_weather(row):
-    df = weather_data[(weather_data['BusID'] == row['BusID']) &
-                      (weather_data['Timestamp'] - row['Timestamp']).abs() <= timedelta(minutes=5)]
-    if not df.empty:
-        return df.loc[df['Timestamp'].sub(row['Timestamp']).abs().idxmin()]
-    return pd.Series()
+    try:
+        # Load all data at once
+        bus_data = session.query(HistoricalBusData).all()
+        weather_data = pd.read_sql(session.query(WeatherData).statement, session.bind)
+        stops_data = session.query(Stop).all()
 
-weather_features = bus_data.apply(get_nearest_weather, axis=1)
-combined_data = pd.concat([bus_data.reset_index(drop=True), weather_features.reset_index(drop=True)], axis=1)
+        # Convert weather data timestamps for faster lookups
+        weather_data['Timestamp'] = pd.to_datetime(weather_data['Timestamp'])
 
-#nearest stop for each bus row
-def get_nearest_stop(row):
-    route_stops = stops[stops['route_id'] == row['RouteID']]
-    row_coord = (row['Latitude'], row['Longitude'])
-    min_dist = float('inf')
-    nearest = None
-    for _, stop in route_stops.iterrows():
-        stop_coord = (stop['latitude'], stop['longitude'])
-        dist = geodesic(row_coord, stop_coord).meters
-        if dist < min_dist:
-            min_dist = dist
-            nearest = stop
-    return pd.Series({
-        'stop_lat': nearest['latitude'],
-        'stop_lon': nearest['longitude'],
-        'stop_id': nearest['stop_id']
-    }) if nearest is not None else pd.Series()
+        # Map stops by route for faster lookup
+        stops_by_route = {}
+        for stop in stops_data:
+            if stop.route_id not in stops_by_route:
+                stops_by_route[stop.route_id] = []
+            stops_by_route[stop.route_id].append(stop)
 
-stop_features = bus_data.apply(get_nearest_stop, axis=1)
-combined_data = pd.concat([combined_data, stop_features], axis=1)
+        print(f"Processing {len(bus_data)} bus records...")
+        processed = 0
 
-# ETA to nearest stop
-def calculate_eta(row):
-    future_points = bus_data[(bus_data['BusID'] == row['BusID']) &
-                              (bus_data['RouteID'] == row['RouteID']) &
-                              (bus_data['Timestamp'] > row['Timestamp'])]
+        # Process each bus record
+        for bus in bus_data:
+            processed += 1
+            if processed % 1000 == 0:
+                print(f"Processed {processed}/{len(bus_data)} records...")
 
-    for _, future in future_points.iterrows():
-        if geodesic((future['Latitude'], future['Longitude']), (row['stop_lat'], row['stop_lon'])).meters < 50:
-            return (future['Timestamp'] - row['Timestamp']).total_seconds()
+            # Skip records with missing data
+            if not bus.RouteID or not bus.Latitude or not bus.Longitude or not bus.Speed:
+                continue
 
-    return None
+            # Find stops for this route
+            stops = stops_by_route.get(bus.RouteID, [])
+            if not stops:
+                continue
 
-combined_data['ETA_seconds'] = combined_data.apply(calculate_eta, axis=1)
+            # Find nearest stop
+            try:
+                bus_lat = float(bus.Latitude)
+                bus_lon = float(bus.Longitude)
+            except (ValueError, TypeError):
+                continue
 
-#export
-final_dataset = combined_data.dropna(subset=['ETA_seconds'])
-final_dataset.to_csv("training_data.csv", index=False)
+            try:
+                nearest_stop = min(
+                    stops,
+                    key=lambda stop: haversine(bus_lat, bus_lon, stop.latitude, stop.longitude)
+                )
 
-print("Training data saved to training_data.csv")
+                distance = haversine(bus_lat, bus_lon, nearest_stop.latitude, nearest_stop.longitude)
+            except (ValueError, TypeError):
+                continue
+
+            # Calculate basic ETA (distance/speed)
+            try:
+                speed = float(bus.Speed)
+                if speed <= 0:
+                    continue
+                eta_seconds = distance / (speed * 0.277778)  # Convert km/h to m/s
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+
+            # Find closest weather record (within 5 minutes)
+            bus_timestamp = bus.Timestamp
+            if not bus_timestamp:
+                continue
+
+            # Handle weather data safely
+            temperature = precipitation = wind_speed = None
+            try:
+                # Filter weather data for this bus
+                filtered_weather = weather_data[weather_data['BusID'] == bus.BusID]
+
+                if not filtered_weather.empty:
+                    # Calculate time differences
+                    bus_dt = pd.to_datetime(bus_timestamp)
+                    time_diffs = abs((filtered_weather['Timestamp'] - bus_dt).dt.total_seconds())
+
+                    # Find closest within 5 minutes (300 seconds)
+                    close_weather = filtered_weather[time_diffs < 300]
+
+                    if not close_weather.empty:
+                        # Find the closest weather record by time
+                        idx = time_diffs[close_weather.index].idxmin()
+                        closest_weather = filtered_weather.loc[idx]
+
+                        temperature = closest_weather['Temperature']
+                        precipitation = closest_weather['Precipitation']
+                        wind_speed = closest_weather['WindSpeed']
+            except Exception as e:
+                # Just continue without weather data if there's an error
+                print(f"Weather data error at record {processed}: {e}")
+
+            # Create row with all features
+            if eta_seconds < 3600:  # Only include ETAs less than 1 hour
+                row = {
+                    'BusID': bus.BusID,
+                    'RouteID': bus.RouteID,
+                    'Latitude': bus_lat,
+                    'Longitude': bus_lon,
+                    'Speed': speed,
+                    'stop_id': nearest_stop.stop_id,
+                    'stop_lat': nearest_stop.latitude,
+                    'stop_lon': nearest_stop.longitude,
+                    'distance_to_stop': distance,
+                    'Temperature': temperature,
+                    'Precipitation': precipitation,
+                    'WindSpeed': wind_speed,
+                    'hour_of_day': bus_timestamp.hour,
+                    'day_of_week': bus_timestamp.weekday(),
+                    'is_weekend': 1 if bus_timestamp.weekday() >= 5 else 0,
+                    'ETA_seconds': round(eta_seconds, 2)
+                }
+                training_rows.append(row)
+
+        # Save to CSV
+        df = pd.DataFrame(training_rows)
+        df.to_csv("training_data.csv", index=False)
+        print(f"Saved {len(df)} training rows to training_data.csv")
+        print(f"   Features included: {', '.join(df.columns)}")
+
+    finally:
+        session.close()
+
+
+if __name__ == "__main__":
+    generate_training_data()
