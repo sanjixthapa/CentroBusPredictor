@@ -1,11 +1,9 @@
 #models.py
-
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func, DECIMAL
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
-
 
 class Route(Base):
     __tablename__ = 'Routes'
