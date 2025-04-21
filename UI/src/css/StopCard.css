@@ -1,0 +1,10 @@
+.stops-card {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #89cdd6;
+    transition: transform 0.2s;
+    height: 20%;
+    display: flex;
+    flex-direction: row;
+  }
