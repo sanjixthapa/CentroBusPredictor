@@ -1,0 +1,276 @@
+{
+    "buses": [
+      {
+        "busNumber": "1",
+        "route": "Main to Downtown",
+        "stops": [
+          {
+            "lat": 43.0481,
+            "lng": -76.1474,
+            "name": "Main St & Central Park"
+          },
+          {
+            "lat": 43.051,
+            "lng": -76.143,
+            "name": "5th Ave & Main St"
+          },
+          {
+            "lat": 43.054,
+            "lng": -76.137,
+            "name": "Downtown Station"
+          }
+        ],
+        "path": [
+          [43.0481, -76.1474],
+          [43.051, -76.143],
+          [43.054, -76.137]
+        ]
+      },
+      {
+        "busNumber": "2",
+        "route": "Airport to University",
+        "stops": [
+          {
+            "lat": 43.0412,
+            "lng": -76.1358,
+            "name": "Airport"
+          },
+          {
+            "lat": 43.0455,
+            "lng": -76.129,
+            "name": "Elm St & Airport Rd"
+          },
+          {
+            "lat": 43.05,
+            "lng": -76.1185,
+            "name": "University Campus"
+          }
+        ],
+        "path": [
+          [43.0412, -76.1358],
+          [43.0455, -76.129],
+          [43.05, -76.1185]
+        ]
+      },
+      {
+        "busNumber": "3",
+        "route": "Northside to Medical Center",
+        "stops": [
+          {
+            "lat": 43.062,
+            "lng": -76.152,
+            "name": "Northside Terminal"
+          },
+          {
+            "lat": 43.058,
+            "lng": -76.145,
+            "name": "City College"
+          },
+          {
+            "lat": 43.055,
+            "lng": -76.142,
+            "name": "General Hospital"
+          }
+        ],
+        "path": [
+          [43.062, -76.152],
+          [43.058, -76.145],
+          [43.055, -76.142]
+        ]
+      },
+      {
+        "busNumber": "4",
+        "route": "East End Circular",
+        "stops": [
+          {
+            "lat": 43.053,
+            "lng": -76.125,
+            "name": "Eastgate Mall"
+          },
+          {
+            "lat": 43.056,
+            "lng": -76.128,
+            "name": "Riverside Park"
+          },
+          {
+            "lat": 43.059,
+            "lng": -76.132,
+            "name": "Highland Square"
+          },
+          {
+            "lat": 43.053,
+            "lng": -76.125,
+            "name": "Eastgate Mall"
+          }
+        ],
+        "path": [
+          [43.053, -76.125],
+          [43.056, -76.128],
+          [43.059, -76.132],
+          [43.053, -76.125]
+        ]
+      },
+      {
+        "busNumber": "5",
+        "route": "Westside Express",
+        "stops": [
+          {
+            "lat": 43.042,
+            "lng": -76.155,
+            "name": "West Transit Center"
+          },
+          {
+            "lat": 43.046,
+            "lng": -76.148,
+            "name": "Central Plaza"
+          },
+          {
+            "lat": 43.051,
+            "lng": -76.142,
+            "name": "Convention Center"
+          }
+        ],
+        "path": [
+          [43.042, -76.155],
+          [43.046, -76.148],
+          [43.051, -76.142]
+        ]
+      },
+      {
+        "busNumber": "6",
+        "route": "Southside Shuttle",
+        "stops": [
+          {
+            "lat": 43.035,
+            "lng": -76.14,
+            "name": "Southside Depot"
+          },
+          {
+            "lat": 43.038,
+            "lng": -76.136,
+            "name": "Tech Park"
+          },
+          {
+            "lat": 43.042,
+            "lng": -76.133,
+            "name": "Shopping District"
+          }
+        ],
+        "path": [
+          [43.035, -76.14],
+          [43.038, -76.136],
+          [43.042, -76.133]
+        ]
+      },
+      {
+        "busNumber": "7",
+        "route": "Harbor Line",
+        "stops": [
+          {
+            "lat": 43.057,
+            "lng": -76.118,
+            "name": "Ferry Terminal"
+          },
+          {
+            "lat": 43.054,
+            "lng": -76.122,
+            "name": "Maritime Museum"
+          },
+          {
+            "lat": 43.051,
+            "lng": -76.126,
+            "name": "Waterfront Park"
+          }
+        ],
+        "path": [
+          [43.057, -76.118],
+          [43.054, -76.122],
+          [43.051, -76.126]
+        ]
+      },
+      {
+        "busNumber": "8",
+        "route": "University Connector",
+        "stops": [
+          {
+            "lat": 43.049,
+            "lng": -76.118,
+            "name": "University East"
+          },
+          {
+            "lat": 43.052,
+            "lng": -76.121,
+            "name": "Research Park"
+          },
+          {
+            "lat": 43.055,
+            "lng": -76.124,
+            "name": "Innovation Center"
+          }
+        ],
+        "path": [
+          [43.049, -76.118],
+          [43.052, -76.121],
+          [43.055, -76.124]
+        ]
+      },
+      {
+        "busNumber": "9",
+        "route": "Park & Ride Express",
+        "stops": [
+          {
+            "lat": 43.065,
+            "lng": -76.14,
+            "name": "North Park & Ride"
+          },
+          {
+            "lat": 43.058,
+            "lng": -76.138,
+            "name": "Central Station"
+          },
+          {
+            "lat": 43.052,
+            "lng": -76.135,
+            "name": "Government Center"
+          }
+        ],
+        "path": [
+          [43.065, -76.14],
+          [43.058, -76.138],
+          [43.052, -76.135]
+        ]
+      },
+      {
+        "busNumber": "10",
+        "route": "Night Owl",
+        "stops": [
+          {
+            "lat": 43.054,
+            "lng": -76.137,
+            "name": "Downtown Station"
+          },
+          {
+            "lat": 43.051,
+            "lng": -76.143,
+            "name": "5th Ave & Main St"
+          },
+          {
+            "lat": 43.048,
+            "lng": -76.147,
+            "name": "Entertainment District"
+          },
+          {
+            "lat": 43.045,
+            "lng": -76.142,
+            "name": "Night Market"
+          }
+        ],
+        "path": [
+          [43.054, -76.137],
+          [43.051, -76.143],
+          [43.048, -76.147],
+          [43.045, -76.142]
+        ]
+      }
+    ]
+  }
