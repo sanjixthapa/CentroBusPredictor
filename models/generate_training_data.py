@@ -1,18 +1,9 @@
+# generate_training_data.py
 import pandas as pd
-import math
 from datetime import datetime
+from geopy.distance import geodesic
 from centroapp.DBconnector import get_db_session
 from centroapp.models import HistoricalBusData, WeatherData, Stop
-
-
-def haversine(lat1, lon1, lat2, lon2):
-    """Calculate distance between two points in meters"""
-    R = 6371  # km
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlambda = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2.0) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2.0) ** 2
-    return R * 2 * math.asin(math.sqrt(a)) * 1000  # meters
 
 
 def generate_training_data():
@@ -61,12 +52,15 @@ def generate_training_data():
                 continue
 
             try:
+                # Using geodesic for consistent distance calculation
+                bus_location = (bus_lat, bus_lon)
+
                 nearest_stop = min(
                     stops,
-                    key=lambda stop: haversine(bus_lat, bus_lon, stop.latitude, stop.longitude)
+                    key=lambda stop: geodesic(bus_location, (stop.latitude, stop.longitude)).meters
                 )
 
-                distance = haversine(bus_lat, bus_lon, nearest_stop.latitude, nearest_stop.longitude)
+                distance = geodesic(bus_location, (nearest_stop.latitude, nearest_stop.longitude)).meters
             except (ValueError, TypeError):
                 continue
 

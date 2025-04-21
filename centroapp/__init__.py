@@ -9,6 +9,7 @@ from .getstops import register_stops
 from .prediction import register_predictions
 from .DBconnector import init_db, get_db_session
 from .models import Route, HistoricalBusData, RealTimeBusData
+
 import atexit
 
 def create_app():

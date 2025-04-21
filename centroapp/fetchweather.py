@@ -107,7 +107,5 @@ def register_weather(app):
                             # "weather_id": db_entry.WeatherID if db_entry else None
                         }
 
-
             result.append(bus_data)  # Append inside the loop
-
         return jsonify(result)
