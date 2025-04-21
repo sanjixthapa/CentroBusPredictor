@@ -5,10 +5,11 @@ import './css/App.css'
 import { Route, Routes } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import Help from './pages/Help'
+import Map from './pages/Map'
+import BusRouteDetail from './pages/BusRouteDetail'
 
 function App() {
-  const [count, setCount] = useState(0)
-
+  
   return (
     <div className='navigation'>
       <NavBar />
@@ -17,7 +18,9 @@ function App() {
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/allbuses' element={<AllBuses />} />
-          <Route path='help' element={<Help />} />
+          <Route path='/help' element={<Help />} />
+          <Route path='/map' element={<Map />} />
+          <Route path="/:routeID" element={<BusRouteDetail />} />
         </Routes>
       </main>
     </div>
