@@ -1,0 +1,74 @@
+{
+    "buses": [
+      {
+        "busNumber": "1",
+        "route": "Main to Downtown",
+        "stops": [
+          {
+            "lat": 43.0481,
+            "lng": -76.1474,
+            "name": "Main St & Central Park"
+          },
+          {
+            "lat": 43.051,
+            "lng": -76.143,
+            "name": "5th Ave & Main St"
+          },
+          {
+            "lat": 43.054,
+            "lng": -76.137,
+            "name": "Downtown Station"
+          }
+        ],
+        "path": [
+          [
+            43.0481,
+            -76.1474
+          ],
+          [
+            43.051,
+            -76.143
+          ],
+          [
+            43.054,
+            -76.137
+          ]
+        ]
+      },
+      {
+        "busNumber": "2",
+        "route": "Airport to University",
+        "stops": [
+          {
+            "lat": 43.0412,
+            "lng": -76.1358,
+            "name": "Airport"
+          },
+          {
+            "lat": 43.0455,
+            "lng": -76.129,
+            "name": "Elm St & Airport Rd"
+          },
+          {
+            "lat": 43.05,
+            "lng": -76.1185,
+            "name": "University Campus"
+          }
+        ],
+        "path": [
+          [
+            43.0412,
+            -76.1358
+          ],
+          [
+            43.0455,
+            -76.129
+          ],
+          [
+            43.05,
+            -76.1185
+          ]
+        ]
+      }
+    ]
+  }
