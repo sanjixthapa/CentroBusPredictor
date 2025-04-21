@@ -25,47 +25,53 @@ export function getBusRoute(){
     return {routes, loading, error}
 }
 
-export function getStopFor(query){
-    const [stops,setStops] =useState([])
+export function getStopTo(query){
+    const [stopsTo,setStopsTo] =useState([])
     const [loading, setLoading]= useState(true)
     const [error,setError] = useState(null)
 
     useEffect(()=> {
         const fetchData = async () => {
             try{
-                const data = await fetch(`http://127.0.0.1:5000/stops?route=${query}&dir=TO%20CAMPUS`)
+                const response = await fetch(`http://127.0.0.1:5000/stops?route=${query}&dir=TO%20CAMPUS`);
+                const data = await response.json();
+                console.log(data)
+                setStopsTo(data)
             }catch(err){
                 setError(err)
                 console.log(err.message)
             }finally{
                 setLoading(false)
             }
-            fetchData();
         }
-    },[])
-    return {stops, loading, error}
-
-    
+        fetchData();
+    },[query])
+    return {stopsTo, loading, error}
 }
 
-// export function getStopBack(query){
-//     const [stops,setStops] =useState([])
-//     const [loading, setLoading]= useState(true)
-//     const [error,setError] = useState(null)
+export function getStopBack(query){
+    const [stopsBack,setStopsBack] =useState([])
+    const [loading, setLoading]= useState(true)
+    const [error,setError] = useState(null)
 
-//     useEffect(()=> {
-//         const fetchData = async () => {
-//             try{
-//                 const data = await fetch()
-//             }catch(err){
-//                 setError(err)
-//                 console.log(err.message)
-//             }finally{
-//                 setLoading(false)
-//             }
+    useEffect(()=> {
+        const fetchData = async () => {
+            try{
+                const response = await fetch(`http://127.0.0.1:5000/stops?route=${query}&dir=FROM%20CAMPUS`)
+                const data = await response.json();
+                console.log(data)
+                setStopsBack(data)
+            }catch(err){
+                setError(err)
+                console.log(err.message)
+            }finally{
+                setLoading(false)
+            }
 
-//         }
-//     },[])
+        }
+        fetchData();
+    },[query])
 
+    return {stopsBack, loading, error}
     
-// }
+}
