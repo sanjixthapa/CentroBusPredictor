@@ -32,12 +32,10 @@ print(f"Dataset size after dropping NA: {len(df)}")
 X = df[features]
 y = df[target]
 
-print(f"Features used for training: {features}")
 
 # Train/test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-print("Training model...")
 model = RandomForestRegressor(
     n_estimators=100,
     random_state=42,
@@ -54,16 +52,4 @@ print("\nModel evaluation:")
 print(f"Mean Absolute Error: {mae:.2f} seconds")
 print(f"R² Score: {r2:.4f}")
 
-# Feature importance
-feature_importance = pd.DataFrame({
-    'Feature': features,
-    'Importance': model.feature_importances_
-}).sort_values('Importance', ascending=False)
-
-print("\nFeature importance:")
-for i, row in feature_importance.iterrows():
-    print(f"{row['Feature']}: {row['Importance']:.4f}")
-
-# Save model
-print("Saving model to eta_predictor.pkl")
 joblib.dump(model, "eta_predictor.pkl")
