@@ -52,12 +52,29 @@ def store_routes_in_db(routes_data):
     finally:
         session.close()
 
-
+def fetch_routes_from_db(): #getting routes from db now
+    session = get_db_session()
+    try:
+        query = session.query(Route)
+        routes = query.all()
+        return [
+            {
+                "route": rt.RouteID,
+                "rtname": rt.Route
+                
+            } for rt in routes
+        ]
+    except Exception as e:
+        session.rollback()
+        print(f"could not get routes from db {e}")
+    finally:
+        session.close()
+        
 def register_routedata(app):
-    @app.route("/routes", methods=['GET'])
+    @app.route("/routes/db", methods=['GET'])
     def fetch_rtdata():
-        result = fetch_route_data()
+        result = fetch_routes_from_db()
         # Store routes in database
-        if isinstance(result, list):
-            store_routes_in_db(result)
+        #if isinstance(result, list):
+        #    store_routes_in_db(result)
         return jsonify(result)
