@@ -1,16 +1,15 @@
-#init.py
-import datetime
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
+
+from models.predict_eta import register_eta_prediction
 from .fetchbuses import register_routes, fetch_realtime_data
 from .fetchroutes import register_routedata
 from .fetchweather import register_weather
 from .getstops import register_stops
 from .prediction import register_predictions
 from .DBconnector import init_db, get_db_session
-from .models import Route, HistoricalBusData, RealTimeBusData
+from .models import Route
 
-import atexit
 
 def create_app():
     app = Flask(__name__)
@@ -24,6 +23,9 @@ def create_app():
     register_weather(app)
     register_stops(app)
     register_predictions(app)
+
+    # Register the updated ETA prediction endpoints
+    register_eta_prediction(app)
 
     # Set up the background scheduler
     scheduler = BackgroundScheduler()
@@ -46,9 +48,8 @@ def create_app():
             except Exception as e:
                 print(f"Error during scheduled fetch for route {route_id}: {e}")
 
-    # Schedule the job to run every 2 minutesx
+    # Schedule the job to run every 1 minute
     scheduler.add_job(scheduled_bus_fetch, 'interval', minutes=1)
     scheduler.start()
-
 
     return app
