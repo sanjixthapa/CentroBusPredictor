@@ -43,8 +43,4 @@ y_pred = model.predict(X_test)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
 
-print("\nModel evaluation:")
-print(f"MAE: {mae:.2f} seconds")
-print(f"R² Score: {r2:.4f}")
-
 joblib.dump(model, "../eta_predictor.pkl")
