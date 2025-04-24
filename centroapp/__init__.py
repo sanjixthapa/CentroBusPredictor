@@ -49,7 +49,7 @@ def create_app():
                 print(f"Error during scheduled fetch for route {route_id}: {e}")
 
     # Schedule the job to run every 1 minute
-    scheduler.add_job(scheduled_bus_fetch, 'interval', minutes=1)
-    scheduler.start()
+   # scheduler.add_job(scheduled_bus_fetch, 'interval', minutes=1)
+    #scheduler.start()
 
     return app
