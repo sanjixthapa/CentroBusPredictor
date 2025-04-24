@@ -1,7 +1,9 @@
-# predict_eta.py
+# predict_eta.py (final version with live + ML fallback)
+import os
 import joblib
 import pandas as pd
 import numpy as np
+import requests
 from flask import request, jsonify
 from geopy.distance import geodesic
 from datetime import datetime, timedelta
@@ -9,14 +11,38 @@ from sqlalchemy import func
 from centroapp.DBconnector import get_db_session
 from centroapp.models import Stop, HistoricalBusData
 
-model = joblib.load("eta_predictor.pkl")
+# Load trained model
+model_path = os.path.join(os.path.dirname(__file__), "../models/eta_predictor.pkl")
+model = joblib.load(model_path)
 
+# Feature list for model
 features = [
     'Latitude', 'Longitude', 'Speed',
     'stop_lat', 'stop_lon', 'distance_to_stop',
     'hour_sin', 'hour_cos', 'weekday_sin', 'weekday_cos',
     'is_weekend'
 ]
+
+# Fetch Centro live predictions
+API_KEY = "PUZXP7CxWkPaWnvDWdacgiS4M"
+BASE_URL = "https://bus-time.centro.org/bustime/api/v3/"
+
+def fetch_predictions(stop_ids, route_ids=None, top=1):
+    params = {
+        "key": API_KEY,
+        "stpid": ",".join(stop_ids),
+        "format": "json",
+        "top": top
+    }
+    if route_ids:
+        params["rt"] = ",".join(route_ids)
+
+    response = requests.get(BASE_URL + "getpredictions", params=params)
+    if response.status_code != 200:
+        return []
+
+    data = response.json()
+    return data.get("bustime-response", {}).get("prd", [])
 
 def register_eta_prediction(app):
     @app.route("/predict_eta", methods=["GET"])
@@ -34,7 +60,8 @@ def register_eta_prediction(app):
             target_dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
             hour, weekday = target_dt.hour, target_dt.weekday()
             is_weekend = 1 if weekday >= 5 else 0
-            mysql_weekday = weekday + 1
+
+            now = datetime.now()
 
             stop = session.query(Stop).filter_by(route_id=route_id, stop_id=stop_id).first()
             if not stop:
@@ -42,7 +69,29 @@ def register_eta_prediction(app):
 
             stop_lat, stop_lon = float(stop.latitude), float(stop.longitude)
 
+            # Check if request is close enough for live predictions (within 1 hour)
+            if abs((target_dt - now).total_seconds()) < 3600:
+                centro_predictions = fetch_predictions([stop_id], [route_id])
+
+                if centro_predictions:
+                    nearest_prediction = min(centro_predictions, key=lambda p: p.get('countdown', float('inf')))
+                    countdown_min = nearest_prediction.get('countdown')
+                    if countdown_min is not None:
+                        arrival_time = now + timedelta(minutes=countdown_min)
+                        window_early = (arrival_time - timedelta(minutes=1)).strftime("%H:%M")
+                        window_late = (arrival_time + timedelta(minutes=1)).strftime("%H:%M")
+
+                        return jsonify({
+                            "route_id": route_id,
+                            "stop_id": stop_id,
+                            "requested_time": target_dt.strftime("%Y-%m-%d %H:%M"),
+                            "predicted_arrival_window": f"{window_early} to {window_late}",
+                            "source": "live centro prediction"
+                        })
+
+            # Fall back to historical ML model
             historical_buses = []
+            mysql_weekday = weekday + 1
             for window_size in range(1, 4):
                 hour_start = max(0, hour - window_size)
                 hour_end = min(23, hour + window_size)
@@ -92,11 +141,13 @@ def register_eta_prediction(app):
             buffer_seconds = max(30, min(300, abs(eta_seconds * 0.1)))
             earliest = (target_dt + timedelta(seconds=eta_seconds - buffer_seconds)).strftime("%H:%M")
             latest = (target_dt + timedelta(seconds=eta_seconds + buffer_seconds)).strftime("%H:%M")
+
             return jsonify({
                 "route_id": route_id,
                 "stop_id": stop_id,
                 "requested_time": target_dt.strftime("%Y-%m-%d %H:%M"),
-                "predicted_arrival_window": f"{earliest} to {latest}"
+                "predicted_arrival_window": f"{earliest} to {latest}",
+                "source": "historical model prediction"
             })
 
         except Exception as e:

@@ -47,4 +47,4 @@ print("\nModel evaluation:")
 print(f"MAE: {mae:.2f} seconds")
 print(f"R² Score: {r2:.4f}")
 
-joblib.dump(model, "eta_predictor.pkl")
+joblib.dump(model, "../eta_predictor.pkl")
