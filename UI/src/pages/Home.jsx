@@ -1,21 +1,16 @@
 import { useState } from "react";
 import BusCard from "../components/BusCard";
 import '../css/Home.css'
-import { getBusRoute } from "../services/getBusRoute";
+import { getBuses, getBusRoute } from "../services/getBusRoute";
 
 function Home() {
     // need to add the state for rerendering
-    const [searchQuery,setSearchQuery] = useState('')
-    const {routes, loading, error } = getBusRoute();
+    const {runBuses, loading: loadingBuses, error: errorBuses } = getBuses();
+    console.log(runBuses)
+    // const {routes, loading: loadingRoute, loading: errorRoute } = getBusRoute();
     
-    // const HandleSearch=(e) =>{
-    //     // preventDefault so that it won't refresh page when state change
-    //     e.preventDefault()
-    //     alert(searchQuery)
-    //     setSearchQuery("")
-    // }
-    if (loading) return <div>Loading routes...</div>
-    if (error) return <div>Error : {error}</div>
+    if (loadingBuses) return <div>Loading routes...</div>
+    if (errorBuses) return <div>Error : {error}</div>
 
     return (
         <div className="home">
@@ -24,7 +19,7 @@ function Home() {
             </div>
             <div className="bus-grid">
                 {/* it help with the filters*/}
-                {routes.map(route => 
+                {runBuses.map(route => 
                 <BusCard bus={route} key={route.id} />)}
             </div>
         </div>
