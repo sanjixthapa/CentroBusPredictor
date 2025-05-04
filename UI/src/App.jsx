@@ -21,6 +21,8 @@ function App() {
           <Route path='/help' element={<Help />} />
           <Route path='/map' element={<Map />} />
           <Route path="/:routeID" element={<BusRouteDetail />} />
+          <Route path='/:routeID/:stopId' element={<Map />} />
+          <Route path="/:routeID/:busID/map"  element={<Map />} />
         </Routes>
       </main>
     </div>
