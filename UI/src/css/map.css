@@ -1,3 +1,11 @@
+.map-navbar .to-button{
+    background-color: red;
+}
+
+.map-navbar .from-button{
+    background-color: blue;
+}
+
 
 .map-container {
     height: 100vh;

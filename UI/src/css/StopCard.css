@@ -4,7 +4,7 @@
     overflow: hidden;
     background-color: #89cdd6;
     transition: transform 0.2s;
-    height: 20%;
+    height: auto;
     display: flex;
     flex-direction: row;
   }

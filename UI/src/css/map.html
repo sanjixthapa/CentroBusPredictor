@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Bus Tracker</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
+
+    .leaflet-popup-content {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    // Initialize the map centered on a location (e.g., Syracuse, NY)
+    const map = L.map('map').setView([43.0481, -76.1474], 13); // Default to Syracuse, NY
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data Â© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+      maxZoom: 18,
+    }).addTo(map);
+
+    // Custom Bus Icon
+    const busIcon = L.icon({
+      iconUrl: 'https://img.icons8.com/ios/50/000000/bus.png', // You can replace this URL with any bus image
+      iconSize: [30, 30],
+      iconAnchor: [15, 15], // Adjusted so that the bus icon points to the correct spot
+      popupAnchor: [0, -15] // Adjusted to place the popup correctly
+    });
+
+    // Bus routes (defined route and bus stop locations)
+    const busRoutes = [
+      {
+        busNumber: '1',
+        route: 'Main to Downtown',
+        stops: [
+          { lat: 43.0481, lng: -76.1474, name: 'Main St & Central Park' },
+          { lat: 43.0510, lng: -76.1430, name: '5th Ave & Main St' },
+          { lat: 43.0540, lng: -76.1370, name: 'Downtown Station' },
+        ],
+        path: [  // Define the route (line connecting stops)
+          [43.0481, -76.1474],
+          [43.0510, -76.1430],
+          [43.0540, -76.1370]
+        ]
+      },
+      {
+        busNumber: '2',
+        route: 'Airport to University',
+        stops: [
+          { lat: 43.0412, lng: -76.1358, name: 'Airport' },
+          { lat: 43.0455, lng: -76.1290, name: 'Elm St & Airport Rd' },
+          { lat: 43.0500, lng: -76.1185, name: 'University Campus' }
+        ],
+        path: [
+          [43.0412, -76.1358],
+          [43.0455, -76.1290],
+          [43.0500, -76.1185]
+        ]
+      }
+    ];
+
+    let markers = {};
+
+    // Function to add or update bus markers and routes
+    function updateBusMarkers() {
+      busRoutes.forEach(bus => {
+        // Create bus stop markers
+        bus.stops.forEach(stop => {
+          L.marker([stop.lat, stop.lng])
+            .addTo(map)
+            .bindPopup(`<b>Bus Stop</b><br>${stop.name}`);
+        });
+
+        // Draw the bus route as a polyline
+        L.polyline(bus.path, { color: 'blue' }).addTo(map);
+
+        // Simulate bus location and add/update marker
+        if (markers[bus.busNumber]) {
+          markers[bus.busNumber].setLatLng(bus.path[bus.path.length - 1]); // Move to the last stop for now
+        } else {
+          let marker = L.marker(bus.path[0], { icon: busIcon })
+            .addTo(map)
+            .bindPopup(`<b>Bus #${bus.busNumber}</b><br>Route: ${bus.route}`);
+          markers[bus.busNumber] = marker;
+        }
+      });
+    }
+
+    // Simulate movement (randomly change bus locations within the route every 5 seconds)
+    setInterval(() => {
+      busRoutes.forEach(bus => {
+        // Randomly pick a point on the route to simulate bus movement
+        let randomIndex = Math.floor(Math.random() * bus.path.length);
+        bus.path[randomIndex] = [
+          bus.path[randomIndex][0] + (Math.random() - 0.5) * 0.001,
+          bus.path[randomIndex][1] + (Math.random() - 0.5) * 0.001
+        ];
+      });
+
+      updateBusMarkers();
+    }, 5000);
+
+    // Initial marker placement and route drawing
+    updateBusMarkers();
+  </script>
+</body>
+</html>
+
+
+// Replace the buses array with an async fetch('/api/buses') call.
+// serve a JSON endpoint that returns current bus positions.
+// Call the API in setInterval to get live updates.
