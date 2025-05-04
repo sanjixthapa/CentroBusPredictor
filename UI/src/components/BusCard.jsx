@@ -1,17 +1,25 @@
+import "../css/BusCard.css";
+import {Link} from 'react-router-dom'
 
+function BusCard({ bus }) {
+  const linkPath = bus.route
+  ? `/${bus.route}`
+  : `/${bus.route_id}/${bus.bus_id}/map`;
 
-function BusCard({bus}) {
-    return (
-        <div className="bus-card">
-            <div className="bus-title">
-                <h3>Bus Name</h3>
-            </div>
-            <div className="bus-info">
-                <h4>{bus.route}</h4>
-                <p>{bus.path}</p>
-            </div>
+  return (
+    <Link to={linkPath}>
+      <div className="bus-card">
+        <div className="bus-title">
+          <h3>{bus.route}</h3>
+          <h2>{bus.rtname}</h2>
         </div>
-    )
+        <div className="bus-info">
+          <h4>{bus.bus_id}</h4>
+          <p>{bus.route_id}</p>
+        </div>
+      </div>
+    </Link>
+  );
 }
 
 export default BusCard;
