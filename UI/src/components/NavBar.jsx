@@ -24,7 +24,6 @@ function NavBar() {
             <div className='navbar-links'>
                 <Link to='/'>Home </Link>
                 <Link to='/allbuses'>Bus Information</Link>
-                <Link to='/map'>Map</Link>
                 <Link to='/help'>Help</Link>
             </div>
         </nav>

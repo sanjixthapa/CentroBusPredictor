@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom'
 function BusCard({ bus }) {
   const linkPath = bus.route
   ? `/${bus.route}`
-  : `/${bus.route_id}/${bus.bus_id}/map`;
+  : `/${bus.route_id}/${bus.bus_id}/1`;
 
   return (
     <Link to={linkPath}>
