@@ -5,7 +5,8 @@ from datetime import datetime
 from flask import jsonify
 from .fetchbuses import fetch_realtime_data
 from .DBconnector import get_db_session
-from .models import WeatherData
+from .models import WeatherData, HistoricalBusData
+from sqlalchemy import desc
 
 WEATHER_API = "https://api.open-meteo.com/v1/forecast"
 
@@ -69,6 +70,38 @@ def save_weather_to_db(weather_data):
     finally:
         session.close()
 
+#fallback
+def get_latest_buses_from_db(route_id):
+    session = get_db_session()
+    try:
+        subquery = (
+            session.query(
+                HistoricalBusData.BusID,
+                HistoricalBusData.Latitude,
+                HistoricalBusData.Longitude,
+                HistoricalBusData.Timestamp
+            )
+            .filter(HistoricalBusData.RouteID == route_id)
+            .order_by(desc(HistoricalBusData.Timestamp))
+            .limit(1)  # Customize how many recent entries you want
+            .all()
+        )
+
+        return [
+            {
+                "bus_id": bus.BusID,
+                "latitude": bus.Latitude,
+                "longitude": bus.Longitude,
+                "timestamp": bus.Timestamp.strftime("%Y-%m-%d %H:%M")
+            }
+            for bus in subquery
+        ]
+    except Exception as e:
+        print(f"[ERROR] Failed DB fallback: {e}")
+        return []
+    finally:
+        session.close()
+
 
 def register_weather(app):
     @app.route('/routes/<route_id>/vehicles/weather', methods=['GET'])
@@ -76,8 +109,9 @@ def register_weather(app):
         buses = fetch_realtime_data(route=route_id)
 
         if isinstance(buses, dict) and "error" in buses:
-            return jsonify(buses)
-
+            print(f"no running buses for {route_id}, fallback to db")
+            buses = get_latest_buses_from_db(route_id)
+        
         result = []  # Initialize empty list
         for bus in buses:
             bus_data = {
@@ -104,7 +138,7 @@ def register_weather(app):
                             "wind_speed": weather.get("wind_speed_10m"),
                             "time": weather.get("time"),
                             "weather_id": weather.get("weather_id")
-                            # "weather_id": db_entry.WeatherID if db_entry else None
+                            
                         }
 
             result.append(bus_data)  # Append inside the loop
