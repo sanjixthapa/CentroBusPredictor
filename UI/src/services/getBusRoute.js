@@ -59,7 +59,7 @@ export function getStopTo(stop_id) {
                 try {
                     // Fallback to "FROM CAMPUS"
                     const fallbackResponse = await fetch(
-                        `http://127.0.0.1:5001/stops?route=${stop_id}&dir=FROM%20CAMPUS`
+                        `http://127.0.0.1:5001/stops?route=${stop_id}&dir=TO%20CAMPUS`
                     );
                     
                     if (!fallbackResponse.ok) throw new Error("Failed to fetch fallback direction");
@@ -189,16 +189,25 @@ function generateRouteId(routeCode, routeName) {
     return `route-${Math.abs(hash)}`;
   }
 
-export function getPrediction(query){
+export function getPrediction(routeID, stopID){
     const [predictions,setPredictions] = useState([])
     const [error, setError] =useState(null)
     const [loading, setLoading] = useState(true)
     useEffect(()=>{
+
+        if(!routeID || !stopID ) return;
         const fetchData = async() =>{
             try{
-                const response = await fetch(`http://localhost:5001/predict_eta_future?route_id=OSW10&stop_id=16183&date=2025-04-2&time=18:47`)
+                // OSW46
+                const response = await fetch(`http://localhost:5001/predict_eta_future?route_id=${routeID}&stop_id=${stopID}&date=2025-05-01&time=9:30`)
                 const data = await response.json()
                 console.log(data)
+                if (data.error) {
+                    setError(data.error); // Handle API error messages
+                    console.log(data.error.message)
+                  } else {
+                    setPredictions(data);
+                }
                 setPredictions(data)
             }catch(err){
                 setError(err)
@@ -209,7 +218,34 @@ export function getPrediction(query){
         }
         fetchData()
 
-    },[query])
+    },[routeID, stopID])
 
     return {predictions, loading, error}
+}
+
+export function getWeather(routeID){
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [weathers, setWeathers] = useState([])
+
+    useEffect(()=> {
+        if(!routeID) return
+        const fetchData = async() => {
+            try{
+                const response = await fetch(`http://localhost:5001/routes/${routeID}/vehicles/weather`)
+                if(!response.ok) throw new Error("Failed to fetch");
+                const data = await response.json()
+                console.log(data)
+                setWeathers(data)
+            }catch(err){
+                setError(err)
+                console.log(err.message)
+            }finally{
+                setLoading(false)
+            }
+        }
+        fetchData()
+    },[routeID])
+
+    return {weathers, loading, error}
 }
