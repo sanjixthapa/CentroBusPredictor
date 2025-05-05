@@ -19,10 +19,9 @@ function App() {
           <Route path='/' element={<Home />} />
           <Route path='/allbuses' element={<AllBuses />} />
           <Route path='/help' element={<Help />} />
-          <Route path='/map' element={<Map />} />
           <Route path="/:routeID" element={<BusRouteDetail />} />
           <Route path='/:routeID/:stopId' element={<Map />} />
-          <Route path="/:routeID/:busID/map"  element={<Map />} />
+          <Route path="/:routeID/:busID/1"  element={<Map />} />
         </Routes>
       </main>
     </div>
