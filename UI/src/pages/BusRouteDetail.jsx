@@ -13,6 +13,7 @@ function BusRouteDetail() {
   const {stopsBack, loading: loadingBack, error: errorBack} = getStopBack(routeID);
   const {stopsTo, loading: loadingTo , error: errorTo } = getStopTo(routeID);
 
+  console.log(stopsTo)
   console.log(stopsBack)
   console.log(loadingBack)
   console.log(loadingTo)

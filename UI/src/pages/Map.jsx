@@ -1,22 +1,53 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css'; 
 import '../css/map.css';
-import {getPrediction, getStopTo, getBuses, getStopBack } from '../services/getBusRoute';
+import {getPrediction, getStopTo, getBuses, getStopBack, getWeather } from '../services/getBusRoute';
 import { useParams } from 'react-router-dom';
 import { useState } from "react";
+import busLogo from '../assets/bus.png';
+import L from 'leaflet'; 
 
 function Map() {
     // do handle click on the location for stop
-    const {routeID, busID} = useParams()
-    const {runBuses, loading, error } = getBuses();
-    const {direction, setDirection} = useState('to')
-    console.log('Current direction:', direction);
-    console.log(runBuses)
+    const { routeID, busID = 'defaultBusID'  } = useParams();
+    const {runBuses, loading: loadingBus, error: errorBus } = getBuses();
+    const [direction, setDirection] = useState('to')
+    const [selectedStopID, setSelectedStop] = useState(null);
+    const {predictions, loading: loadingPredictions} = getPrediction(
+        routeID,
+        selectedStopID?.stop_id
+    )
+    const {weathers, loading: loadingWeather, error: erroWeather} = getWeather(routeID)
+    
+
+
+    const handleStopClick = (stop)=> {
+        setSelectedStop(stop)
+    }
+
+ 
+
+    const busIcon = new L.Icon({
+        iconUrl: busLogo,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+    });
+    
+   
+
+    const foundBus = busID !== 'defaultBusID' 
+        ? runBuses?.find(bus => bus.bus_id === Number(busID))
+        : null;
+
+    
+    
+
     
     // get Buses not returning an array
     const { stopsTo, loading: loadingTo, error: errorTo } = getStopTo(routeID);
     const {stopsBack, loading: loadingBack, error:errorBack} = getStopBack(routeID);
-    // const {predictions, loading: loadingPre, error: errorPre} = getPrediction(busID);
+    console.log(routeID)
+    // const {predictions, loading: loadingPre, error: errorPre} = getPrediction(busID,routeIDID);
     
     console.log(stopsTo);
     console.log(stopsBack);
@@ -56,15 +87,69 @@ function Map() {
                         <Marker 
                             key={`${stop.stop_id}-${index}`} 
                             position={[stop.latitude, stop.longitude]}
+                            eventHandlers={{
+                                click: () => handleStopClick(stop)
+                            }}
                         >
                             <Popup>
                                 <strong>{stop.stop_name}</strong><br />
                                 Direction: {stop.direction}<br />
                                 Stop ID: {stop.stop_id}
+
+                                {selectedStopID?.stop_id === stop.stop_id && (
+                                    <div className='predictions'>
+                                        {loadingPredictions ? (
+                                            <p>Loading predictions...</p>
+                                        ) : predictions ? (
+                                            <>
+                                                <p>Arrival window: {predictions.predicted_arrival_window}</p>
+                                                {/* <pre>{JSON.stringify(predictions, null, 2)}</pre> Debug output */}
+                                            </>
+                                        ) : (
+                                            <p>No predictions available</p>
+                                        )}
+                                    </div>
+                                )}
                             </Popup>
                         </Marker>
                     ))}
+                    {foundBus && (
+                        <Marker 
+                        icon={busIcon}
+                        key={`bus-${foundBus.bus_id}`}
+                        position={[
+                            Number(foundBus.latitude), 
+                            Number(foundBus.longitude)
+                        ]}
+                        >
+                        <Popup>
+                            Bus {foundBus.bus_id}<br />
+                            Route: {foundBus.route_id}<br />
+                            Speed: {foundBus.speed} mph
+                        </Popup>
+                        </Marker>
+                    )}
                 </MapContainer>
+            </div>
+            
+            <div className='weather'>
+                {weathers.length > 0 ?
+                (
+                    weathers.map((bus)=>
+                    (
+                        bus.weather && (
+                            <div key={bus.bus_id}>
+                                <h4>Bus {bus.route_id} Weather</h4>
+                                <p>🌧️ Precipitation: {bus.weather.precipitation} mm</p>
+                                <p>🌡️ Temperature: {bus.weather.temperature}°C</p>
+                                <p>💨 Wind Speed: {bus.weather.wind_speed} km/h</p>
+                            </div>
+                        )
+                    ))
+                ):(
+                    <p>No weather details</p>
+                )
+                }
             </div>
         </div>
     );
