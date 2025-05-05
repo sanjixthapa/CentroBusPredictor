@@ -6,6 +6,9 @@
     background-color: blue;
 }
 
+.weather-display{
+    background-color: red;
+}
 
 .map-container {
     height: 100vh;
