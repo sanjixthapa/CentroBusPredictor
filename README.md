@@ -20,3 +20,22 @@ Challenges to overcome.
 • Working with structured data, JSON, MySQL
 • Data analysis
 • Web interface design
+
+
+# How to run (locally):
+- make sure you are running on Windows, MacOS, or Linux system with wifi and CLI with scripting privledges enabled
+- Node.js, Python3 installed on system
+
+<h2>Steps:</h2>
+
+__NOTE:__ Do first two steps only if u dont have the modules installed already
+1. in CLI, run pip install -r requirements.txt
+2. then for react.js: npm install vite , npm install react-leaflet leaflet
+3. run backend from CLI with python main.py
+4. run frontend from CLI with npm run dev
+5. http://localhost:5173
+
+#list endpts maybe?
+   
+  
+
